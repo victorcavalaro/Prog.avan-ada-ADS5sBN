@@ -1,54 +1,63 @@
 <!DOCTYPE html>
 <html lang="pt-br">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Teste de API JWT</title>
-    <link rel="stylesheet" href="style.css">
-</head>
-<body>
-
-    <h1>Painel de Teste da API</h1>
-
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Teste de API com Supabase</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <h1>Painel de Teste com Supabase</h1>
     <div id="public-area">
-        <fieldset>
-            <legend>Cadastrar Novo Usuário</legend>
-            <form id="register-form">
-                <input type="text" id="register-name" placeholder="Nome" required>
-                <input type="email" id="register-email" placeholder="E-mail" required>
-                <input type="password" id="register-password" placeholder="Senha" required>
-                <select id="register-role">
-                    <option value="USER">User</option>
-                    <option value="ADMIN">Admin</option>
-                </select>
-                <button type="submit">Cadastrar</button>
-            </form>
-        </fieldset>
-
-        <fieldset>
-            <legend>Fazer Login</legend>
-            <form id="login-form">
-                <input type="email" id="login-email" placeholder="E-mail" required>
-                <input type="password" id="login-password" placeholder="Senha" required>
-                <button type="submit">Login</button>
-            </form>
-        </fieldset>
+      <fieldset>
+        <legend>Cadastrar Novo Usuário</legend>
+        <form id="register-form">
+          <input type="text" id="register-name" placeholder="Nome" required />
+          <input
+            type="email"
+            id="register-email"
+            placeholder="E-mail"
+            required
+          />
+          <input
+            type="password"
+            id="register-password"
+            placeholder="Senha"
+            required
+          />
+          <select id="register-role">
+            <option value="USER">User</option>
+            <option value="ADMIN">Admin</option>
+          </select>
+          <button type="submit">Cadastrar</button>
+        </form>
+      </fieldset>
+      <fieldset>
+        <legend>Fazer Login</legend>
+        <form id="login-form">
+          <input type="email" id="login-email" placeholder="E-mail" required />
+          <input
+            type="password"
+            id="login-password"
+            placeholder="Senha"
+            required
+          />
+          <button type="submit">Login</button>
+        </form>
+      </fieldset>
     </div>
-
     <div id="protected-area">
-        <h2 id="welcome-message"></h2>
-        <button id="get-profile-btn">Ver Meu Perfil (Protegido)</button>
-        <button id="logout-btn">Logout</button>
-        
-        <div id="admin-area">
-            <h3>Painel do Administrador</h3>
-            <button id="list-users-btn">Listar Todos os Usuários (Admin)</button>
-        </div>
+      <h2 id="welcome-message"></h2>
+      <button id="get-profile-btn">Ver Meu Perfil</button>
+      <button id="logout-btn">Logout</button>
+      <div id="admin-area">
+        <h3>Painel do Administrador</h3>
+        <button id="list-users-btn">Listar Todos os Perfis (Admin)</button>
+      </div>
     </div>
-
-    <div id="results">
-        Aguardando ações...
-    </div>
+    <div id="results">Aguardando ações...</div>
 
     <script src="/index.js"></script>
+  </body>
 </html>

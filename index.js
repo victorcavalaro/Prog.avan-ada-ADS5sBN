@@ -1,99 +1,73 @@
-const API_BASE_URL = "http://localhost:3001/api";
+// --- CONFIGURAÇÃO ---
+const SUPABASE_URL = "https://mvghzbgsoyiejbreykql.supabase.co";
+const SUPABASE_KEY =
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im12Z2h6Ymdzb3lpZWpicmV5a3FsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDk1NTk2MzQsImV4cCI6MjA2NTEzNTYzNH0.VUvr_1_JZR1hM2l88l46UtcXyFNDe0Y-zCFUWo2jS88";
+
+const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 const registerForm = document.getElementById("register-form");
 const loginForm = document.getElementById("login-form");
 const getProfileBtn = document.getElementById("get-profile-btn");
 const listUsersBtn = document.getElementById("list-users-btn");
 const logoutBtn = document.getElementById("logout-btn");
-
-const publicArea = document.getElementById("public-area");
-const protectedArea = document.getElementById("protected-area");
-const adminArea = document.getElementById("admin-area");
-const welcomeMessage = document.getElementById("welcome-message");
 const resultsDiv = document.getElementById("results");
 
 registerForm.addEventListener("submit", async (e) => {
   e.preventDefault();
-  const body = {
-    name: document.getElementById("register-name").value,
+  const { data, error } = await supabase.auth.signUp({
     email: document.getElementById("register-email").value,
     password: document.getElementById("register-password").value,
-    role: document.getElementById("register-role").value,
-  };
-  try {
-    const response = await fetch(`${API_BASE_URL}/auth/signup`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(body),
-    });
-    const data = await response.json();
-    showResult(data, response.ok);
-  } catch (error) {
-    showResult({ message: "Erro de conexão", error: error.message }, false);
-  }
+    options: {
+      data: {
+        name: document.getElementById("register-name").value,
+        role: document.getElementById("register-role").value,
+      },
+    },
+  });
+  showResult(
+    error || {
+      message: "Cadastro solicitado! Verifique seu e-mail para confirmação.",
+      data,
+    },
+    !error
+  );
 });
 
 loginForm.addEventListener("submit", async (e) => {
   e.preventDefault();
-  const body = {
+  const { data, error } = await supabase.auth.signInWithPassword({
     email: document.getElementById("login-email").value,
     password: document.getElementById("login-password").value,
-  };
-  try {
-    const response = await fetch(`${API_BASE_URL}/auth/signin`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(body),
-    });
-    const data = await response.json();
-    if (response.ok && data.token) {
-      localStorage.setItem("authToken", data.token); // Armazena o token
-      showResult({ message: "Login bem-sucedido!", token: data.token }, true);
-      updateUI();
-    } else {
-      showResult(data, false);
-    }
-  } catch (error) {
-    showResult({ message: "Erro de conexão", error: error.message }, false);
-  }
+  });
+  showResult(error || data, !error);
+  if (!error) updateUI();
 });
 
 getProfileBtn.addEventListener("click", async () => {
-  const token = localStorage.getItem("authToken");
-
-  const endpoint = `${API_BASE_URL}/users/me`;
-
-  try {
-    const response = await fetch(endpoint, {
-      method: "GET",
-      headers: { Authorization: `Bearer ${token}` },
-    });
-    const data = await response.json();
-    showResult(data, response.ok);
-  } catch (error) {
-    showResult({ message: "Erro de conexão", error: error.message }, false);
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) {
+    showResult({ message: "Você não está logado." }, false);
+    return;
   }
+
+  const { data, error } = await supabase
+    .from("profiles")
+    .select()
+    .eq("id", user.id)
+    .single();
+  showResult(error || data, !error);
 });
 
 listUsersBtn.addEventListener("click", async () => {
-  const token = localStorage.getItem("authToken");
-  const endpoint = `${API_BASE_URL}/admin/users`;
-
-  try {
-    const response = await fetch(endpoint, {
-      method: "GET",
-      headers: { Authorization: `Bearer ${token}` },
-    });
-    const data = await response.json();
-    showResult(data, response.ok);
-  } catch (error) {
-    showResult({ message: "Erro de conexão", error: error.message }, false);
-  }
+  const { data, error } = await supabase.from("profiles").select("*");
+  showResult(error || data, !error);
 });
 
-logoutBtn.addEventListener("click", () => {
-  localStorage.removeItem("authToken");
-  showResult({ message: "Você foi desconectado." }, true);
+logoutBtn.addEventListener("click", async () => {
+  const { error } = await supabase.auth.signOut();
+  showResult(error || { message: "Desconectado com sucesso." }, !error);
   updateUI();
 });
 
@@ -102,28 +76,26 @@ function showResult(data, isSuccess) {
   resultsDiv.className = isSuccess ? "success" : "error";
 }
 
-function decodeToken(token) {
-  try {
-    const payloadBase64 = token.split(".")[1];
-    const decodedPayload = atob(payloadBase64);
-    return JSON.parse(decodedPayload);
-  } catch (e) {
-    return null;
-  }
-}
+async function updateUI() {
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
+  const publicArea = document.getElementById("public-area");
+  const protectedArea = document.getElementById("protected-area");
+  const adminArea = document.getElementById("admin-area");
+  const welcomeMessage = document.getElementById("welcome-message");
 
-function updateUI() {
-  const token = localStorage.getItem("authToken");
-  if (token) {
-    const decoded = decodeToken(token);
+  if (session) {
     publicArea.style.display = "none";
     protectedArea.style.display = "block";
-    welcomeMessage.textContent = `Bem-vindo! (Token armazenado)`;
+    welcomeMessage.textContent = `Bem-vindo, ${session.user.email}!`;
 
-    if (
-      decoded &&
-      (decoded.role === "ADMIN" || decoded.user?.role === "ADMIN")
-    ) {
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("role")
+      .eq("id", session.user.id)
+      .single();
+    if (profile && profile.role === "ADMIN") {
       adminArea.style.display = "block";
     } else {
       adminArea.style.display = "none";
@@ -131,8 +103,8 @@ function updateUI() {
   } else {
     publicArea.style.display = "block";
     protectedArea.style.display = "none";
-    adminArea.style.display = "none";
   }
 }
 
-document.addEventListener("DOMContentLoaded", updateUI);
+updateUI();
+supabase.auth.onAuthStateChange(updateUI);

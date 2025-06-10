@@ -30,13 +30,14 @@ button {
   border: 1px solid #ccc;
 }
 button {
-  background-color: #007bff;
+  background-color: #3ecf8e;
   color: white;
   cursor: pointer;
   border: none;
+  font-weight: bold;
 }
 button:hover {
-  background-color: #0056b3;
+  background-color: #31a572;
 }
 #protected-area,
 #admin-area {
